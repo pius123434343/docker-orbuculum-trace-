@@ -1,93 +1,146 @@
 # Orbuculum Trace
+![image info](images/Orbtrace_Layout.png)
 
+## General information’s
+Only for **Linux** (Config for STM32H743 parallel trace)
+(**Windows doesn’t work** with passthrough usb-devices with docker, it doesn’t work to use trace and debug parallel)
 
-
-## Getting started
-
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
-
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
-
-## Add your files
-
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) or push an existing Git repository with the following command:
-
-```
-cd existing_repo
-git remote add origin https://gitlab.ethz.ch/wyss-zurich-robotics-platform/internal/orbuculum-trace.git
-git branch -M main
-git push -uf origin main
-```
-
-## Integrate with your tools
-
-- [ ] [Set up project integrations](https://gitlab.ethz.ch/wyss-zurich-robotics-platform/internal/orbuculum-trace/-/settings/integrations)
-
-## Collaborate with your team
-
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Set auto-merge](https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html)
-
-## Test and Deploy
-
-Use the built-in continuous integration in GitLab.
-
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/index.html)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
-
-***
-
-# Editing this README
-
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
-
-## Suggestions for a good README
-
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
-
-## Name
-Choose a self-explaining name for your project.
-
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
-
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
-
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
 
 ## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+- Install **Docker**
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+- Download **start_terminator_layout.sh** and **Dockerfile**. Place it in the same folder.
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+- Open **start_terminator_layout.sh** and change the marked line with the folder to your **file.elf**
 
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
 
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
+    docker run -itd --privileged \ \
+    -p 2000:2000/tcp \ \
+    -v /dev/bus/usb:/dev/bus/usb \  
+    **-v /home/birop/Downloads:/home/birop/Downloads \  <--this line**\
+    --name orbtrace-container \ \
+    Orbtrace
 
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+### Optional
+You can also change your orbtrace setting for example (default = 4 lines parallel)
+`xdotool type "docker exec -it ${CONTAINER_ID} bash -c 'orbuculum -O \"-T 4\" -m 500; exec bash'"`
 
-## License
-For open source projects, say how it is licensed.
+## Start Docker
+Navigate to the folder with the **Docker** and **start_terminator_layout.sh** and make:
+```
+sudo apt-get install xdotool
+chmod +x start_terminator_layout.sh
+./start_terminator_layout.sh
+```
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+Wait (2min)\
+Now you should see 5 screens:
+- Blank terminal
+- blackmagic
+- orbuculum
+- orbuculum docker
+- gdb-multiarch
+
+If you want more **orbuculum terminals** make:
+`docker exec -it orbtrace-container bash`
+
+## Enable ITM/DWT/ETM
+#### (main.c)
+To enable **ITM/DWT/ETM** add this to **main.c**
+```
+#define DBG_TER (*(volatile uint32_t *)0x5C000E00)
+
+	__HAL_RCC_GPIOE_CLK_ENABLE(); //parallel tracing
+  GPIO_InitTypeDef  GPIO_InitStruct;
+  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+  GPIO_InitStruct.Pin = GPIO_PIN_2 | GPIO_PIN_3 | GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_6;
+  GPIO_InitStruct.Alternate = GPIO_AF0_TRACE;
+  HAL_GPIO_Init( GPIOE, &GPIO_InitStruct );
+
+
+  RCC->APB4ENR |= (1 << 21);
+  DBGMCU->CR |= DBGMCU_CR_DBG_TRACECKEN;
+  DBG_TER |= (1 << 0);
+
+ITM_SendChar(‘t‘);   // to send character ‘t‘ on ITM port
+```
+
+## Enable ITM/DWT/ETM
+#### (gdb-terminal)
+- Download **gdbtrace.init** place it to your Dockerfile 
+- Add following lines to **Debugger console**
+
+This setup was tested with the STM32H743. If you are using **other microcontrollers** you can download the **gdbtrace.init** from orbuculum. You also need to make some changes in the **gdbtrace.init** and your **Code**. 
+```
+source path/to/gdbtrace.init	
+enableSTM32TRACE 4
+dwtSamplePC 1
+dwtSyncTap 3
+dwtPostTap 1
+dwtPostInit 1
+dwtPostReset 10
+dwtCycEna 1
+ITMId 1
+ITMGTSFreq 3
+ITMTSPrescale 3
+ITMTXEna 1
+ITMSYNCEna 1
+ITMEna 1
+
+ITMTER 0 0x00000009
+
+startETM
+
+dwtTraceException 1
+ITMTSEna 1
+```
+
+
+## Debug
+You can either use the gdb-terminal in docker or STM32CubeIDE.
+
+### Debugging with GDB-terminal
+To start gdb-session make these commands in gdb-terminal:
+```
+file path/to/file.elf 
+target extended-remote localhost:2000
+set mem inaccessible-by-default off
+monitor swd_scan
+attach 1
+load
+```
+
+### Debugging with STM32CubeIDE
+To start debugging-session with STM32CubeIDE open new GDB Hardware Debugging and add your config like this:
+
+![image info](images/STM32Cube_Config.png)
+
+## Orbuculum clients
+#### orbmortem (watch exact procedure of the program)
+
+`orbmortem -P ETM4 -e path/to/file.elf`
+
+- press h to halt
+- press ? for info
+
+
+
+#### orbtop (watch the workload of the individual tasks)
+`orbtop -E -e path/to/file.elf `
+#### orbcat (to watch ITM port like printf)
+`orbcat -c 0,”%c”`
+
+## Troubleshooting:
+If blackmagic hangs up make: 
+- 	Ctrl + c
+- 	`blackmagic -v 5`
+
+If permission error occurs, make:
+	
+`Sudo command`
+
+For other Microcontrollers you need to make changes in **gdbtrace.init** and the commands for the **gdb-terminal**. You can get information’s from the [discord forum](https://discord.gg/P7FYThy) or on the [GitHub page orbuculum](https://github.com/orbcode/orbuculum).
