@@ -1,80 +1,100 @@
 # Orbuculum Trace
 ![image info](images/Orbtrace_Layout.png)
 
-## General information’s
-Only for **Linux** (Config for STM32H743 parallel trace)
-(**Windows doesn’t work** with passthrough usb-devices with docker, it doesn’t work to use trace and debug parallel)
-
+## Only for Linux (Config for STM32H743 parallel trace)
+**Note:** This setup is for Linux only. On Windows, passthrough USB devices do not work with Docker, making it impossible to use trace and debug features in parallel.
 
 ## Installation
 
-- Install **Docker**
+1. Install **Docker**
 
-- Download **start_terminator_layout.sh** and **Dockerfile**. Place it in the same folder.
+2. Download **start_terminator_layout.sh** and **Dockerfile**. Place them in the same folder.
 
-- Open **start_terminator_layout.sh** and change the marked line with the folder to your **file.elf**
-
-
+3. Open **start_terminator_layout.sh** and modify the specified line to include the path to your **.elf** file:
 
     docker run -itd --privileged \ \
     -p 2000:2000/tcp \ \
     -v /dev/bus/usb:/dev/bus/usb \  
-    **-v /home/birop/Downloads:/home/birop/Downloads \  <--this line**\
+    **-v /home/birop/Downloads:/home/birop/Downloads \  <--update this line**\
     --name orbtrace-container \ \
     Orbtrace
 
-### Optional
-You can also change your orbtrace setting for example (default = 4 lines parallel)
+
+4. **Optional: Customize Orbtrace settings**\
+You can modify your Orbtrace configuration, e.g., to use 4 parallel lines (default):
 `xdotool type "docker exec -it ${CONTAINER_ID} bash -c 'orbuculum -O \"-T 4\" -m 500; exec bash'"`
 
-## Start Docker
-Navigate to the folder with the **Docker** and **start_terminator_layout.sh** and make:
+5. **Start Docker**\
+Navigate to the folder containing **start_terminator_layout.sh** and **Dockerfile**. Then execute the following commands:
 ```
 sudo apt-get install xdotool
 chmod +x start_terminator_layout.sh
 ./start_terminator_layout.sh
 ```
 
-Wait (2min)\
-Now you should see 5 screens:
-- Blank terminal
-- blackmagic
-- orbuculum
-- orbuculum docker
-- gdb-multiarch
+6. **Wait for 2 minutes**\
+After execution, five terminal windows should appear:
 
-If you want more **orbuculum terminals** make:
+- Blank terminal
+- Blackmagic
+- Orbuculum
+- Orbuculum Docker
+- GDB Multiarch
+
+**Note:** If you need additional Orbuculum terminals, run:
+
 `docker exec -it orbtrace-container bash`
 
-## Enable ITM/DWT/ETM
-#### (main.c)
-To enable **ITM/DWT/ETM** add this to **main.c**
+## Enable ITM/DWT/ETM in Your Code (main.c)
+
+Add the following code to your **main.c** file:
+
 ```
 #define DBG_TER (*(volatile uint32_t *)0x5C000E00)
 
-	__HAL_RCC_GPIOE_CLK_ENABLE(); //parallel tracing
-  GPIO_InitTypeDef  GPIO_InitStruct;
-  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-  GPIO_InitStruct.Pin = GPIO_PIN_2 | GPIO_PIN_3 | GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_6;
-  GPIO_InitStruct.Alternate = GPIO_AF0_TRACE;
-  HAL_GPIO_Init( GPIOE, &GPIO_InitStruct );
+__HAL_RCC_GPIOE_CLK_ENABLE(); //parallel tracing
+GPIO_InitTypeDef  GPIO_InitStruct;
+GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+GPIO_InitStruct.Pull = GPIO_NOPULL;
+GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+GPIO_InitStruct.Pin = GPIO_PIN_2 | GPIO_PIN_3 | GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_6;
+GPIO_InitStruct.Alternate = GPIO_AF0_TRACE;
+HAL_GPIO_Init( GPIOE, &GPIO_InitStruct );
 
 
-  RCC->APB4ENR |= (1 << 21);
-  DBGMCU->CR |= DBGMCU_CR_DBG_TRACECKEN;
-  DBG_TER |= (1 << 0);
+RCC->APB4ENR |= (1 << 21);
+DBGMCU->CR |= DBGMCU_CR_DBG_TRACECKEN;
+DBG_TER |= (1 << 0);
 
 ITM_SendChar(‘t‘);   // to send character ‘t‘ on ITM port
 ```
 
-## Enable ITM/DWT/ETM
-#### (gdb-terminal)
-- Download **gdbtrace.init** place it to your Dockerfile 
-- Add following lines to **Debugger console**
+## Debugging Options
+### Using GDB Terminal
+1. Start a GDB session with these commands:
+```
+file path/to/file.elf 
+target extended-remote localhost:2000
+set mem inaccessible-by-default off
+monitor swd_scan
+attach 1
+load
+start
+```
 
-This setup was tested with the STM32H743. If you are using **other microcontrollers** you can download the **gdbtrace.init** from orbuculum. You also need to make some changes in the **gdbtrace.init** and your **Code**. 
+
+### Using STM32CubeIDE
+1. Create a new **GDB Hardware Debugging** configuration.
+2. Add your specific settings for debugging.
+
+![image info](images/STM32Cube_Config.png)
+
+## Enable and start ITM/DWT/ETM in GDB Terminal
+1. Download **gdbtrace.init** \
+Place it in the same directory as your **Dockerfile**.
+2. **Modify the Debugger Console (terminal or STM32CubeIDE)**\
+Add the following commands to the Debugger console:
+
 ```
 source path/to/gdbtrace.init	
 enableSTM32TRACE 4
@@ -91,56 +111,41 @@ ITMTXEna 1
 ITMSYNCEna 1
 ITMEna 1
 
+dwtTraceException 1
+ITMTSEna 1
+
 ITMTER 0 0x00000009
 
 startETM
 
-dwtTraceException 1
-ITMTSEna 1
+
 ```
 
-
-## Debug
-You can either use the gdb-terminal in docker or STM32CubeIDE.
-
-### Debugging with GDB-terminal
-To start gdb-session make these commands in gdb-terminal:
-```
-file path/to/file.elf 
-target extended-remote localhost:2000
-set mem inaccessible-by-default off
-monitor swd_scan
-attach 1
-load
-```
-
-### Debugging with STM32CubeIDE
-To start debugging-session with STM32CubeIDE open new GDB Hardware Debugging and add your config like this:
-
-![image info](images/STM32Cube_Config.png)
 
 ## Orbuculum clients
-#### orbmortem (watch exact procedure of the program)
-
+1. **orbmortem**: Observe the program's exact behavior.\
 `orbmortem -P ETM4 -e path/to/file.elf`
 
-- press h to halt
-- press ? for info
+  -   press `h` to halt
+  -   press `?` for info
 
-
-
-#### orbtop (watch the workload of the individual tasks)
+2. **orbtop**: Monitor task workloads.\
 `orbtop -E -e path/to/file.elf `
-#### orbcat (to watch ITM port like printf)
+3.  **orbcat**: Watch ITM port output like `printf`:\
 `orbcat -c 0,”%c”`
 
+**Note**: 
+Use `-h` to access the help menu, e.g., `orbmortem -h`.
+
 ## Troubleshooting:
-If blackmagic hangs up make: 
-- 	Ctrl + c
+1. **If Blackmagic hangs:**
+- 	`Ctrl + c`
 - 	`blackmagic -v 5`
 
-If permission error occurs, make:
+2. **If you encounter a permission error:**
 	
-`Sudo command`
+    `Sudo command`
 
-For other Microcontrollers you need to make changes in **gdbtrace.init** and the commands for the **gdb-terminal**. You can get information’s from the [discord forum](https://discord.gg/P7FYThy) or on the [GitHub page orbuculum](https://github.com/orbcode/orbuculum).
+3. **For other microcontrollers:**\
+Modify the base addresses in the gdbtrace.init and the GDB terminal commands accordingly. Additional information can be found on the [Orbuculum GitHub page](https://github.com/orbcode/orbuculum) or [Discord forum](https://discord.gg/P7FYThy).
+
