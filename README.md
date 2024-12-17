@@ -4,7 +4,7 @@
 ## Only for Linux (Config for STM32H743 parallel trace)
 **Note:** This setup is for Linux only. On Windows, passthrough USB devices do not work with Docker, making it impossible to use trace and debug features in parallel.
 
-## Installation
+## Installation Linux
 
 1. Install **Docker**
 
@@ -44,6 +44,71 @@ After execution, five terminal windows should appear:
 **Note:** If you need additional Orbuculum terminals, run:
 
 `docker exec -it orbtrace-container bash`
+
+## Installation Windows
+### Requirements
+Download and install MSYS2.\
+Open the mingw64 shell for all commands.
+
+### Step 1: Update System and Install Required Packages
+
+```
+pacman -Syu
+pacman -S base-devel mingw-w64-x86_64-toolchain git
+pacman -S mingw-w64-x86_64-libusb mingw-w64-x86_64-hidapi
+git clone https://github.com/blackmagic-debug/blackmagic.git
+cd blackmagic
+
+pacman -S mingw-w64-x86_64-python3
+```
+
+### Step 2: Install Meson
+To set up Meson, run the following command:
+`pacman -S mingw-w64-x86_64-meson`
+
+### Step 3: Build the Blackmagic Debug Application
+Navigate to the Blackmagic project folder and compile the application:
+
+```
+cd blackmagic
+meson setup build --force-fallback-for=libusb
+meson compile -C build
+ninja -C build
+```
+
+### Step 4: Run the Application
+Start the Blackmagic Debug Application with:\
+
+`~/blackmagic/build/blackmagic -v 5`\
+
+Once started, **TCP port 2000** will be open and ready for connections.
+
+### Step 5: Install Orbuculum
+**Option 1:** Download Prebuilt Binaries
+Download the Orbuculum binaries from the following link:
+[Orbuculum Binaries](https://github.com/orbcode/orbuculum/actions/runs/12271929254
+)
+(client orbmortem is not included)
+
+**Option 2:** Build Orbuculum from Source
+If you prefer to build Orbuculum yourself, follow the instructions in the Orbuculum GitHub README. Example build commands:[Orbuculum Github](https://github.com/orbcode/orbuculum)
+
+
+### Step 6: Install GDB with Multiarch Support
+
+To debug multiple architectures, install GDB with multiarch support:
+
+`pacman -S mingw-w64-x86_64-gdb`
+
+### Step 7: Add Environment Variables
+
+Add the following directories to your Environment Variables:
+
+1. Blackmagic binaries: Path to the Blackmagic executable (e.g., `~/blackmagic/build`).
+2. Orbuculum clients: Path to the **Orbuculum** client executables (e.g., `~/orbuculum/build`).
+
+This ensures that you can run both tools globally from the command line.
+
 
 ## Enable ITM/DWT/ETM in Your Code (main.c)
 
