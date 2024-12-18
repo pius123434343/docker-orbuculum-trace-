@@ -1,8 +1,9 @@
 # Orbuculum Trace
 ![image info](images/Orbtrace_Layout.png)
 
-## Only for Linux (Config for STM32H743 parallel trace)
-**Note:** This setup is for Linux only. On Windows, passthrough USB devices do not work with Docker, making it impossible to use trace and debug features in parallel.
+## Docker-Based Setup (Config for STM32H743 parallel trace)
+**Note:** This docker-setup is for Linux only. On Windows, passthrough USB devices do not work with Docker, making it impossible to use trace and debug features in parallel.
+For windows it is a little more complicated because it has to run without docker.
 
 ## Installation Linux
 
@@ -50,7 +51,7 @@ After execution, five terminal windows should appear:
 Download and install MSYS2.\
 Open the mingw64 shell for all commands.
 
-### Step 1: Update System and Install Required Packages
+1. **Update System and Install Required Packages**
 
 ```
 pacman -Syu
@@ -62,11 +63,11 @@ cd blackmagic
 pacman -S mingw-w64-x86_64-python3
 ```
 
-### Step 2: Install Meson
+2. **Install Meson**\
 To set up Meson, run the following command:
 `pacman -S mingw-w64-x86_64-meson`
 
-### Step 3: Build the Blackmagic Debug Application
+3. **Build the Blackmagic Debug Application**\
 Navigate to the Blackmagic project folder and compile the application:
 
 ```
@@ -76,31 +77,26 @@ meson compile -C build
 ninja -C build
 ```
 
-### Step 4: Run the Application
+4. **Run the Application**\
 Start the Blackmagic Debug Application with:\
-
 `~/blackmagic/build/blackmagic -v 5`\
-
 Once started, **TCP port 2000** will be open and ready for connections.
 
-### Step 5: Install Orbuculum
+5. **Install Orbuculum**\
 **Option 1:** Download Prebuilt Binaries
 Download the Orbuculum binaries from the following link:
 [Orbuculum Binaries](https://github.com/orbcode/orbuculum/actions/runs/12271929254
 )
-(client orbmortem is not included)
-
+(client orbmortem is not included)\
 **Option 2:** Build Orbuculum from Source
 If you prefer to build Orbuculum yourself, follow the instructions in the Orbuculum GitHub README. Example build commands:[Orbuculum Github](https://github.com/orbcode/orbuculum)
 
 
-### Step 6: Install GDB with Multiarch Support
-
+6. **Install GDB with Multiarch Support**
 To debug multiple architectures, install GDB with multiarch support:
-
 `pacman -S mingw-w64-x86_64-gdb`
 
-### Step 7: Add Environment Variables
+7. **Add Environment Variables**
 
 Add the following directories to your Environment Variables:
 
@@ -211,6 +207,11 @@ Use `-h` to access the help menu, e.g., `orbmortem -h`.
 	
     `Sudo command`
 
-3. **For other microcontrollers:**\
+3. **If an objdump error occurs:**\
+Set environment variable manually like this, befor the client command\
+`$env:OBJDUMP = "C:\Program Files (x86)\Arm GNU Toolchain arm-none-eabi\13.3 rel1\bin\arm-none-eabi-objdump"`
+
+
+4. **For other microcontrollers:**\
 Modify the base addresses in the gdbtrace.init and the GDB terminal commands accordingly. Additional information can be found on the [Orbuculum GitHub page](https://github.com/orbcode/orbuculum) or [Discord forum](https://discord.gg/P7FYThy).
 
